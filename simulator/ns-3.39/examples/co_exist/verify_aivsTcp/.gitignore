@@ -1,0 +1,8 @@
+results*
+figures/
+__pycache__/
+*.log
+fct.txt
+pfc.txt
+tor.txt
+mini-topo.txt
