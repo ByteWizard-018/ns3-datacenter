@@ -35,6 +35,12 @@ namespace ns3 {
 		static TypeId GetTypeId(void);
 		static const unsigned fCnt = 128; //max number of queues, 128 for NICs
 		static const unsigned qCnt = 8; //max number of queues, 8 for switches
+		static uint32_t prio_queue; // queue served before round robin (0 = off)
+		static uint64_t wait_limit_ns; // waiting limit D in ns (0 = off)
+		static uint32_t wait_cap; // AI packets in a row before a late queue is served (0 = no cap)
+		static uint64_t cnt_ai, cnt_other; // packets sent from AI / other queues while AI waits
+		static uint64_t aimd_target_ns; // AIMD target TCP wait in ns (0 = off)
+		static uint32_t prio_weight; // max AI packets in a row (0 = no limit)
 		BEgressQueue();
 		virtual ~BEgressQueue();
 		bool Enqueue(Ptr<Packet> p, uint32_t qIndex);
@@ -70,6 +76,11 @@ namespace ns3 {
 		uint32_t m_bytesInQueueTotal;
 		uint64_t m_rxBytes;
 		uint32_t m_rrlast;
+		uint32_t m_prioCount = 0; // AI packets sent in a row
+		uint32_t m_w = 1; // AIMD weight of this port
+		double m_tcpWait = 0; // smoothed TCP waiting time (ns)
+		uint32_t m_aimdCount = 0; // packets since the last AIMD update
+		std::queue<int64_t> m_arrival[qCnt]; // arrival times (ns) per queue, oldest first
 		uint32_t m_qlast;
 		std::vector<Ptr<Queue<Packet>> > m_queues; // uc queues
 		// vamsi

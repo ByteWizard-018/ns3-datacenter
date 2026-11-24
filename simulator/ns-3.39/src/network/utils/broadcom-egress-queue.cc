@@ -25,12 +25,20 @@
 #include "drop-tail-queue.h"
 #include "broadcom-egress-queue.h"
 #include "ns3/packet.h"
+#include <algorithm> // std::min, std::max
 
 
 namespace ns3 {
     NS_LOG_COMPONENT_DEFINE("BEgressQueue");
 
 	NS_OBJECT_ENSURE_REGISTERED(BEgressQueue);
+
+	uint32_t BEgressQueue::prio_queue = 0;
+	uint32_t BEgressQueue::prio_weight = 0;
+	uint64_t BEgressQueue::wait_limit_ns = 0;
+	uint32_t BEgressQueue::wait_cap = 0;
+	uint64_t BEgressQueue::aimd_target_ns = 0;
+	uint64_t BEgressQueue::cnt_ai = 0, BEgressQueue::cnt_other = 0;
 
 	TypeId BEgressQueue::GetTypeId(void)
 	{
@@ -85,6 +93,7 @@ namespace ns3 {
 				m_bytesInQueueTotal += p->GetSize();
 				m_bytesInQueue[qIndex] += p->GetSize();
 				m_rxBytes+= p->GetSize();
+				if ((wait_limit_ns || aimd_target_ns) && qIndex != 0) m_arrival[qIndex].push(Simulator::Now().GetNanoSeconds()); // record arrival time
 			}
 			else
 			{
@@ -116,6 +125,23 @@ namespace ns3 {
 		}
 		else
 		{
+			if (wait_limit_ns != 0 && m_prioCount >= wait_cap) // waiting limit: serve a queue whose oldest packet waited > D
+			{
+				int64_t now = Simulator::Now().GetNanoSeconds();
+				for (uint32_t q = 1; q < qCnt && !found; q++)
+					if (q != prio_queue && !paused[q] && m_queues[q]->GetNPackets() > 0 && now - m_arrival[q].front() > (int64_t)wait_limit_ns)
+					{
+						found = true;
+						qIndex = q;
+					}
+			}
+			uint32_t w = aimd_target_ns ? m_w : prio_weight; // AIMD weight or fixed weight
+			if (!found && prio_queue != 0 && !paused[prio_queue] && m_queues[prio_queue]->GetNPackets() > 0 // AI queue first, at most w packets in a row
+			    && (w == 0 || m_prioCount < w))
+			{
+				found = true;
+				qIndex = prio_queue;
+			}
 			if (!found)
 			{
 				for (qIndex = 1; qIndex <= qCnt; qIndex++)
@@ -131,7 +157,25 @@ namespace ns3 {
 		}
 		if (found)
 		{
+			bool aiWaiting = prio_queue != 0 && !paused[prio_queue] && m_queues[prio_queue]->GetNPackets() > 0;
+			if (aiWaiting) // count who is served while AI waits
+			{
+				if (qIndex == prio_queue) cnt_ai++;
+				else if (qIndex != 0) cnt_other++;
+			}
+			if (aimd_target_ns && qIndex != 0) // AIMD: track TCP wait, update weight every 64 packets
+			{
+				if (qIndex != prio_queue) // TCP packet leaves
+					m_tcpWait = 0.99 * m_tcpWait + 0.01 * (Simulator::Now().GetNanoSeconds() - m_arrival[qIndex].front()); // smoothed TCP waiting time
+				if (aiWaiting && ++m_aimdCount >= 64) // only while AI waits
+				{
+					m_aimdCount = 0;
+					if (m_tcpWait > aimd_target_ns) m_w = std::max<uint32_t>(1, m_w / 2); // TCP too slow: halve
+					else m_w = std::min<uint32_t>(16, m_w + 1); // TCP fine: +1
+				}
+			}
 			Ptr<Packet> p = m_queues[qIndex]->Dequeue();
+			if ((wait_limit_ns || aimd_target_ns) && qIndex != 0) m_arrival[qIndex].pop(); // forget its arrival time
 			m_traceBeqDequeue(p, qIndex);
 			m_bytesInQueueTotal -= p->GetSize();
 			m_bytesInQueue[qIndex] -= p->GetSize();
@@ -140,6 +184,8 @@ namespace ns3 {
 				m_rrlast = qIndex;
 			}
 			m_qlast = qIndex;
+			if (qIndex == prio_queue) m_prioCount++; // length of the current AI run
+			else if (qIndex != 0) m_prioCount = 0;
 			NS_LOG_LOGIC("Popped " << p);
 			NS_LOG_LOGIC("Number bytes " << m_bytesInQueueTotal);
 			// vamsi
