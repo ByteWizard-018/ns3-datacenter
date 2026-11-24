@@ -1,3 +1,7 @@
+# ns3-datacenter: UGRC fork
+
+This fork adds the experiments for a UGRC (CS4900) project at IIT Madras on AI collective and TCP traffic sharing a data-centre fabric. The code, scripts and instructions are in [`simulator/ns-3.39/examples/co_exist/`](simulator/ns-3.39/examples/co_exist/README.md). The original README of ns3-datacenter follows.
+
 
 # ns3-datacenter
 
