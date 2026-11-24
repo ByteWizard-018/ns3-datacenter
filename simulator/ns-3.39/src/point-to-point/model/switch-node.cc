@@ -20,6 +20,8 @@
 
 namespace ns3 {
 
+uint64_t SwitchNode::drops_lossy = 0, SwitchNode::drops_lossless = 0;
+
 TypeId SwitchNode::GetTypeId (void)
 {
 	static TypeId tid = TypeId ("ns3::SwitchNode")
@@ -164,6 +166,7 @@ void SwitchNode::SendToDev(Ptr<Packet>p, CustomHeader &ch) {
 				m_mmu->UpdateIngressAdmission(inDev, qIndex, p->GetSize(), found, unsched);
 				m_mmu->UpdateEgressAdmission(idx, qIndex, p->GetSize(), found);
 			} else {
+				if (found) drops_lossy++; else drops_lossless++; // count the drop
 				return; // Drop
 			}
 			CheckAndSendPfc(inDev, qIndex);

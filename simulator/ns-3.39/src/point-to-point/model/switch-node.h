@@ -45,6 +45,7 @@ private:
 	void CheckAndSendResume(uint32_t inDev, uint32_t qIndex);
 public:
 	Ptr<SwitchMmu> m_mmu;
+	static uint64_t drops_lossy, drops_lossless; // packets dropped by buffer admission, all switches
 
 	static TypeId GetTypeId (void);
 	SwitchNode();
