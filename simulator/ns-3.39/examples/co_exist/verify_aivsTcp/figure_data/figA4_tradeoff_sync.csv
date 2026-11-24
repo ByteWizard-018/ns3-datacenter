@@ -1,0 +1,12 @@
+family,policy,ai_slowdown,tcp_p99_ratio
+Round robin,rr,1.5470,0.8182
+Fixed weight,w2,1.3851,1.0616
+Fixed weight,w4,1.2352,1.5665
+Fixed weight,w8,1.1082,2.4620
+AI first,aifirst,0.9914,7.1265
+AIMD weight,aimd50,1.3951,1.1114
+AIMD weight,aimd100,1.2416,1.4832
+AIMD weight,aimd200,1.1441,1.8938
+Waiting limit,wait50,1.4930,0.6871
+Waiting limit,wait100,1.2691,0.9486
+Waiting limit,wait200,1.1278,1.6504

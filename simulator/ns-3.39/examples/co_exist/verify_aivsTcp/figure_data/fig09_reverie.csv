@@ -1,0 +1,9 @@
+buffer,buffer_scheme,policy,ai_slowdown,tcp_short_p99_us,pfc_pauses,tcp_drops
+12MiB,default (Dynamic Thresholds),round robin,1.9197,236.8000,0,0
+12MiB,Reverie,round robin,1.9037,242.2430,64,0
+12MiB,default (Dynamic Thresholds),waiting limit 100,1.3203,260.0430,0,0
+12MiB,Reverie,waiting limit 100,1.3203,260.0430,0,0
+2.56MB,default (Dynamic Thresholds),round robin,1.9454,237.8760,87956,0
+2.56MB,Reverie,round robin,1.9295,230.5580,34964,26028
+2.56MB,default (Dynamic Thresholds),waiting limit 100,1.3157,261.1600,18652,0
+2.56MB,Reverie,waiting limit 100,1.3050,262.0670,12960,18500

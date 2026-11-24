@@ -1,0 +1,9 @@
+policy,long_flow_mean_fct_ms,long_flows
+TCP alone,5.6887,4736
+round robin,8.5763,4736
+w=4,10.3863,4736
+w=8,10.9348,4736
+AIMD 100,10.3276,4736
+waiting limit 100,10.1698,4736
+waiting limit 200,10.8252,4736
+AI first,12.1381,4736

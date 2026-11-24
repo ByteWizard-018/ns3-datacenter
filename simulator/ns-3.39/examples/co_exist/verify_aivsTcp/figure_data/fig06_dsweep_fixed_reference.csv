@@ -1,0 +1,3 @@
+policy,ai_slowdown,tcp_p99_ratio
+w4,1.2599,1.5179
+w8,1.1275,2.0724
